@@ -35,11 +35,10 @@ export default function useTasks() {
     }
   };
 
-  const addTask = (task: Omit<Task, 'id' | 'status'>) => {
+  const addTask = (task: Omit<Task, 'id'>) => {
     const newTask: Task = {
       ...task,
-      id: uuidv4(),
-      status: 'In progress'
+      id: uuidv4()
     };
     saveTasks([newTask, ...tasks]);
   };

@@ -226,7 +226,7 @@ export default function Index() {
           <Button
             mode='outlined'
             onPress={() => setShowDatePicker(true)}
-            textColor={colors.activeFilter}
+            textColor={colors.text}
             style={styles.dateFilterButton}
           >
             {dateFilter
@@ -246,8 +246,10 @@ export default function Index() {
 
         {showDatePicker && (
           <DateTimePicker
+            minimumDate={new Date()}
             value={dateFilter ?? new Date()}
             mode='date'
+            style={styles.dateTimePicker}
             display={Platform.OS === 'ios' ? 'inline' : 'default'}
             onChange={handleDateChange}
           />

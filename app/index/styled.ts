@@ -66,6 +66,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 700,
     width: '85%'
+  },
+  dateTimePicker: {
+    backgroundColor: '#888',
+    borderRadius: 20
   }
 });
 

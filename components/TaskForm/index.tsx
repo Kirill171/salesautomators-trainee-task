@@ -7,6 +7,17 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Modal, Portal } from 'react-native-paper';
 import styles from './styled';
 
+import {
+  initialErrors,
+  initialTaskData,
+  MAX_DESCRIPTION,
+  MAX_LOCATION,
+  MAX_TITLE,
+  statusItems
+} from '@/constants/taskFormConstants';
+
+import { validateTask } from '@/utils/validateTask';
+
 type Props = {
   visible: boolean;
   onSave: (task: NewTaskData) => void;
@@ -14,38 +25,21 @@ type Props = {
   existingTask?: Task | null;
 };
 
-const MAX_TITLE = 50;
-const MAX_DESCRIPTION = 300;
-const MAX_LOCATION = 100;
-
 export default function TaskForm({
   visible,
   onSave,
   onClose,
   existingTask = null
 }: Props) {
-  const [task, setTask] = useState({
-    title: '',
-    description: '',
-    location: '',
-    date: new Date(),
-    status: 'Pending' as TaskStatus
-  });
-
-  const [errors, setErrors] = useState({
-    title: '',
-    description: '',
-    location: ''
-  });
-
+  const [task, setTask] = useState<NewTaskData>(initialTaskData);
+  const [errors, setErrors] = useState(initialErrors);
   const [isDatePickerVisible, setDatePickerVisibility] =
     useState(false);
+
   const [statusOpen, setStatusOpen] = useState(false);
-  const [statusItems, setStatusItems] = useState([
-    { label: 'In progress', value: 'In progress' },
-    { label: 'Completed', value: 'Completed' },
-    { label: 'Cancelled', value: 'Cancelled' }
-  ]);
+  const [statusValue, setStatusValue] =
+    useState<TaskStatus>('In progress');
+  const [statusItemsState, setStatusItems] = useState(statusItems);
 
   useEffect(() => {
     if (visible && existingTask) {
@@ -56,20 +50,20 @@ export default function TaskForm({
         date: new Date(existingTask.date),
         status: existingTask.status
       });
+      setStatusValue(existingTask.status);
     } else if (visible) {
-      setTask({
-        title: '',
-        description: '',
-        location: '',
-        date: new Date(),
-        status: 'In progress'
-      });
+      setTask(initialTaskData);
+      setStatusValue('In progress');
     }
-    setErrors({ title: '', description: '', location: '' });
+    setErrors(initialErrors);
   }, [visible, existingTask]);
 
+  useEffect(() => {
+    setTask((prev) => ({ ...prev, status: statusValue }));
+  }, [statusValue]);
+
   const handleChange = (
-    field: keyof typeof task,
+    field: keyof NewTaskData,
     value: string | Date
   ) => {
     setTask((prev) => ({ ...prev, [field]: value }));
@@ -85,38 +79,16 @@ export default function TaskForm({
   };
 
   const handleSave = () => {
-    const newErrors = {
-      title: !task.title.trim()
-        ? 'Title is required'
-        : task.title.length > MAX_TITLE
-        ? `Title must be less than ${MAX_TITLE} characters`
-        : '',
-      description: !task.description.trim()
-        ? 'Description is required'
-        : task.description.length > MAX_DESCRIPTION
-        ? `Description must be less than ${MAX_DESCRIPTION} characters`
-        : '',
-      location: !task.location.trim()
-        ? 'Location is required'
-        : task.location.length > MAX_LOCATION
-        ? `Location must be less than ${MAX_LOCATION} characters`
-        : ''
-    };
-
+    const newErrors = validateTask(task);
     setErrors(newErrors);
 
     const hasErrors = Object.values(newErrors).some((e) => e !== '');
     if (hasErrors) return;
 
     onSave(task);
-    setTask({
-      title: '',
-      description: '',
-      location: '',
-      date: new Date(),
-      status: 'In progress'
-    });
-    setErrors({ title: '', description: '', location: '' });
+    setTask(initialTaskData);
+    setStatusValue('In progress');
+    setErrors(initialErrors);
     onClose();
   };
 
@@ -192,13 +164,10 @@ export default function TaskForm({
           <Text style={styles.label}>Status</Text>
           <DropDownPicker
             open={statusOpen}
-            value={task.status}
-            items={statusItems}
+            value={statusValue}
+            items={statusItemsState}
             setOpen={setStatusOpen}
-            setValue={(cb) => {
-              const value = cb(task.status);
-              handleChange('status', value);
-            }}
+            setValue={setStatusValue}
             setItems={setStatusItems}
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}

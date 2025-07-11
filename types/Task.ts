@@ -9,4 +9,4 @@ export interface Task {
   status: TaskStatus;
 }
 
-export type NewTaskData = Omit<Task, 'id' | 'status'>;
+export type NewTaskData = Omit<Task, 'id'>;
